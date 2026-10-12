@@ -203,7 +203,7 @@ def describe(df):
               f"female={(g['sex'] == 'female').mean() * 100:.1f}%")
 
 
-def plot_age_distribution(df, cohort_name):
+def plot_age_distribution(df, cohort_name="Healthy controls"):
     """
     plots the age distribution of the 'age' column in a DataFrame.
     params
