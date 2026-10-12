@@ -9,7 +9,7 @@ Pools four cohorts of healthy adults with CAT12 v12.7 VBM ROI volumes
     - OpenMind (OpenNeuro datasets, healthy subjects that passed QC)
 
 For each cohort: keeps healthy subjects with age and sex, one scan per subject
-(see filter_openmind_sites), scales ROI volumes so that TIV = 1500 cm3, and harmonize
+(see filter_openmind_sites), scales ROI volumes so that TIV = 1500 cm3, and harmonizes
 sex labels to "female"/"male".
 
 Output: config.HC_DATAFRAME
