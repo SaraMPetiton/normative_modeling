@@ -72,7 +72,7 @@ dropped (`fit_normative_model.mean_left_right_hemispheres` prints which).
 
 ## Repository
 
-| File | What it does |
+| File | Use |
 |---|---|
 | `config.py` | Paths, atlas/ROI settings, model class, site correction. Edit this first. |
 | `normative_models.py` | `NormativeBLR` class (fit, predict means and z-scores). |
@@ -160,7 +160,7 @@ model, field strength, resolution, sequence, software version...), and can be co
 with other variables, such as age when an age range is covered by a single cohort (e.g.,
 UK Biobank above ~70 in our training data).
 
-## Usage
+## Use
 
 Python 3.9–3.11. The versions are described in `requirements.txt`: the saved
 models were pickled with scikit-learn 1.3.2, and newer scipy versions can't unpickle them.
