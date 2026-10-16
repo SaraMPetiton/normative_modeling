@@ -12,6 +12,22 @@ Step 2: fits the normative model on healthy controls and computes z-scores.
        model, and saves them to results/zscores/. Participants can have two or more time
        points, in which case the csv has one row per participant and session, with an
        additional column "session".
+    4. Optionally, z-scores can be adjusted for site effects if enough healthy controls
+       from the same site are available for calibration (config.LOCAL_CONTROLS): at each
+       site, the mean z-score of its controls serves as an offset, subtracted from the
+       z-scores of all the site's participants (see adjust_for_site).
+       ! The site's controls are then at 0 on average by construction: don't use their
+       z-scores in analyses that need them to be independent of the other groups'. !
+       We chose this over hierarchical Bayesian regression (HBR; Kia et al., 2020, MICCAI;
+       Kia et al., 2022, PLOS ONE) because HBR needs the site of every training scan, which
+       very large pooled datasets often don't have, and needs the model to be refitted on
+       each new site's data. 
+       "Site" is also a vague proxy for what actually causes the effects: a combination
+       of scanner model, field strength, resolution, sequence, software version, etc., so
+       modelling "site" in training would capture site effects only partially, and could
+       introduce bias where site is confounded with other variables, such as age when an
+       age range is covered by a single cohort (e.g. UK Biobank above ~70 in our training
+       data).
 
 ROIs: Neuromorphometrics atlas, CAT12 v12.7 (280 ROIs: 140 GM + 140 CSF), see config.py.
 
@@ -21,7 +37,6 @@ averaged: 138 ROIs instead of 140, because the 4 ROIs that have no left/right co
 """
 import os
 import pickle
-import warnings
 
 import numpy as np
 import pandas as pd
@@ -164,11 +179,60 @@ def compute_zscores(model, rois, df):
     other_cols = [c for c in df.columns if c not in config.roi_columns(df) and c != "participant_id"]
     return pd.concat([df[["participant_id"]], df_z, df[other_cols]], axis=1)
 
+def adjust_for_site(df_z, rois, is_control, site_col="site", min_controls=30):
+    """
+    Corrects z-scores for potential site effects using healthy controls scanned at the same site (when available).
+
+    The normative model was fitted on very large amounts of data from many scanners, so
+    that its norm doesn't depend on any one of them. 
+    
+    The new data one might want to evaluate against the normative model
+    may have more or less site artefacts, which has the potential to shift all of its z-scores.
+
+    At each site, the local controls' mean z-score per ROI
+    estimates that shift (controls should be at 0 on average), and it is subtracted from
+    every participant of the site:  z_adjusted = z - mean(z of the site's controls).
+    This assumes the site offset is the same at every age and for both sexes (sex is already
+    in the model, so the controls don't need to be sex-balanced). Local controls are then at
+    0 on average, so the other participants are effectively compared to them.
+
+    Sites with fewer than min_controls controls are left unchanged: the offset is estimated
+    with a standard error of about SD / sqrt(n), and every participant of the site inherits
+    that error (~0.2 SD with 30 controls).
+    A column "site_adjusted" (True/False) records which rows were corrected.
+
+    df_z : z-scores (one row per participant and session), with a site column
+    rois : ROI columns to correct
+    is_control : boolean array, True for the rows of local healthy controls
+    """
+
+    df_z = df_z.copy()
+    is_control = np.asarray(is_control, dtype=bool)
+    df_z["site_adjusted"] = False
+    for site, n in df_z.loc[is_control, site_col].value_counts().items():
+        if n < min_controls:
+            print(f"Site {site}: {n} local controls (< {min_controls}), not corrected")
+            continue
+        offset = df_z.loc[is_control & (df_z[site_col] == site).values, rois].mean()
+        rows = (df_z[site_col] == site).values
+        df_z.loc[rows, rois] = df_z.loc[rows, rois] - offset
+        df_z.loc[rows, "site_adjusted"] = True
+        print(f"Site {site}: corrected with {n} local controls "
+              f"(mean |offset| over ROIs: {offset.abs().mean():.2f} SD)")
+    no_controls = set(df_z[site_col]) - set(df_z.loc[is_control, site_col])
+    if no_controls:
+        print(f"Sites without local controls, not corrected: {sorted(no_controls)}")
+    return df_z
 
 def save_zscores(mean_hemispheres=False):
     model, rois = load_or_fit_model(mean_hemispheres)
     df = load_new_participants(mean_hemispheres)
     df_z = compute_zscores(model, rois, df)
+
+    if config.LOCAL_CONTROLS is not None:  # site correction with local healthy controls
+        column, value = config.LOCAL_CONTROLS
+        df_z = adjust_for_site(df_z, rois, (df_z[column] == value).values,
+                               site_col=config.SITE_COLUMN, min_controls=config.MIN_CONTROLS_PER_SITE)
 
     os.makedirs(os.path.dirname(config.zscores_path(mean_hemispheres)), exist_ok=True)
     df_z.to_csv(config.zscores_path(mean_hemispheres), index=False)
