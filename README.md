@@ -40,15 +40,12 @@ CAT12 v12.7 naming). The healthy controls were processed with CAT12 v12.7 (UK Bi
 OpenNeuro), v12.6 (HCP) and v12.7 (OpenBHB).
 
 To use another CAT12 version:
-1. Update that section of `config.py`: number of ROIs, ROI name conventions,
+1. Update `config.py`: number of ROIs, ROI name conventions,
    `ROIS_OF_INTEREST` (the ROIs printed and plotted by the scripts) and
    `ROIS_EXCLUDED_FROM_MAPS`, all named in the CAT12 v12.7 format. Left/right-averaged
    names are derived from `ROIS_OF_INTEREST` automatically.
 2. Rebuild the healthy control dataset and **refit the models**: the models in `models/`
    predict exactly the 280 CAT12 v12.7 ROIs, in a fixed order, and can't be reused.
-
-The rest of the code doesn't change. New participants should be processed with CAT12 v12.7,
-the version used for most of the healthy controls.
 
 **Atlas files for the glass-brain maps**: `plot_extreme_deviations.py` uses the
 Neuromorphometrics label image and its table, as distributed with CAT12 (the atlas CAT12
