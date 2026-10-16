@@ -89,7 +89,7 @@ dropped (`fit_normative_model.mean_left_right_hemispheres` prints which).
 | `models/normative_BLR_BigHC_janv2026_280rois.pkl` | 280 (left and right separate) |
 | `models/normative_BLR_BigHC_janv2026_280rois_mean_btw_hemispheres.pkl` | 138 (mean of left and right) |
 
-Load them with `normative_models.py` importable:
+Load them with `normative_models.py`:
 
 ```python
 import pickle
