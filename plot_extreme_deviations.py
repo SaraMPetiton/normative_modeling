@@ -45,7 +45,7 @@ from statsmodels.stats.multitest import multipletests
 import config
 
 MEAN_HEMISPHERES = False
-Z_THRESHOLD = 1.96         # |z| above which a deviation counts as extreme
+Z_THRESHOLD = 1.96  # extreme = z < -Z_THRESHOLD or z > +Z_THRESHOLD, each direction tested separately
 FDR_ALPHA = 0.05
 TISSUE_SUFFIX = "_GM_Vol"  # one tissue per map: GM and CSF ROIs (and WM too even if we don't use them in our examples) share the same atlas regions
 
@@ -71,12 +71,11 @@ def extreme_deviations(df_z, rois, z_threshold=Z_THRESHOLD, fdr_alpha=FDR_ALPHA)
     """
     n = len(df_z)
     expected = norm.sf(z_threshold)  # e.g. 2.5% for 1.96 
-    # norm.sf is the survival function (probability P(X>t) for X a random variable and t a time)
-    # for the normal distribution: it's the probability that the tissue volume's absolute z-score |z| is over 1.96
-    # under a normal distribution, it is equal to the f(x) integrated between -1.96 and 1.96 for f the density function of the 
-    # normal distribution ~ N(0,1) (default of scipy's "norm" function)
-    # this value is equal to 0.025 = 2.5% --> that's the % of people who would fall outside the norm not because
-    # their tissue volume isn't healthy, but by pure chance alone
+    # norm.sf is the survival function of the standard normal N(0, 1) (scipy's default):
+    # norm.sf(t) = P(z > t) = 1 - CDF(t), the area under the density to the right of t.
+    # For t = 1.96 it is 0.025: under the normative distribution, 2.5% of people are above +1.96 by chance
+    # alone, and by symmetry 2.5% below -1.96. Each direction is tested against this rate.
+
     z = df_z[rois].values
     rows = []
     for direction, counts in [("below", (z < -z_threshold).sum(0)), ("above", (z > z_threshold).sum(0))]:

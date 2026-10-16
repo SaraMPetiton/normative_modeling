@@ -1,0 +1,24 @@
+# subject-level data and outputs: never commit
+data/*
+results/
+*.csv
+*.tsv
+*.nii
+*.nii.gz
+*.png
+
+# ...except the atlas files used for the glass-brain maps
+# (must come after the patterns above, which would otherwise exclude them)
+!data/atlas/
+!data/atlas/**
+!docs/*.png
+
+# old scripts kept locally
+oldies/
+
+# Python / environments / OS
+__pycache__/
+*.pyc
+.venv/
+.ipynb_checkpoints/
+.DS_Store

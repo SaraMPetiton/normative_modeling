@@ -13,9 +13,9 @@ import os
 from normative_models import NormativeBLR
 
 REPO_DIR = os.path.dirname(os.path.abspath(__file__))
-DATA_DIR = os.path.join(REPO_DIR, "data")            # input dataframes (not versioned)
+DATA_DIR = os.path.join(REPO_DIR, "data")            # input dataframes
 MODEL_DIR = os.path.join(REPO_DIR, "models")         # fitted normative models (.pkl)
-RESULTS_DIR = os.path.join(REPO_DIR, "results")      # z-scores, figures (not versioned)
+RESULTS_DIR = os.path.join(REPO_DIR, "results")      # z-scores, figures
 
 # ---------------------------------------------------------------------------
 # Atlas / ROIs (CAT12 v12.7, Neuromorphometrics)
@@ -38,6 +38,10 @@ ROIS_OF_INTEREST = ["lHip_GM_Vol", "rHip_GM_Vol",   # hippocampus
                     "lPal_GM_Vol", "rPal_GM_Vol",   # pallidum
                     "lPut_GM_Vol", "rPut_GM_Vol"]   # putamen
 
+
+# ROIs left out of the extreme-deviation maps: GM "volumes" of the ventricles are only
+# partial-volume voxels at their edges, tiny and noisy, so their z-scores are meaningless.
+ROIS_EXCLUDED_FROM_MAPS = [h + v + "_GM_Vol" for h in ("l", "r") for v in ("3thVen", "4thVen", "LatVen", "InfLatVen")]
 
 def roi_columns(df):
     """ROI columns of a dataframe, in their order in the dataframe."""
@@ -114,6 +118,12 @@ OPENMIND_PRECISE_AGES = {
 NEW_PARTICIPANTS = os.path.join(DATA_DIR, "df_ROI_age_sex_site_M00_M03_v4labels_280rois_cat12_7.csv")
 NEW_PARTICIPANTS_NAME = "rlink"          # used to name the z-score file
 
+# Site correction with local healthy controls (see fit_normative_model.adjust_for_site).
+# If the new participants include healthy controls scanned at their own sites, set
+# LOCAL_CONTROLS = (column, value) identifying them, e.g. ("dx", "HC"); None: no correction.
+LOCAL_CONTROLS = None
+SITE_COLUMN = "site"
+MIN_CONTROLS_PER_SITE = 30  # sites with fewer local controls are left uncorrected
 
 def zscores_path(mean_hemispheres=False):
     """z-score csv of the new participants (one row per participant and session)."""
@@ -124,5 +134,10 @@ def zscores_path(mean_hemispheres=False):
 # ---------------------------------------------------------------------------
 # Atlas images (for glass-brain plots)
 # ---------------------------------------------------------------------------
-ATLAS_LABELS_NII = "/drf/local/spm12/tpm/labels_Neuromorphometrics.nii"
-ATLAS_ROI_TABLE = os.path.join(DATA_DIR, "lobes_Neuromorphometrics_with_dfROI_correspondencies.csv")
+# Neuromorphometrics label image and its table, as distributed with CAT12 (the atlas CAT12
+# uses to compute the ROI volumes): templates_volumes_old/ at tag 12.8.2 of
+# https://github.com/ChristianGaser/cat12. Label values in the image are the table's ROIid.
+# With SPM12's labels_Neuromorphometrics.nii instead, set ATLAS_LABEL_COLUMN = "ROIbaseid".
+ATLAS_LABELS_NII = os.path.join(DATA_DIR, "atlas", "neuromorphometrics.nii")
+ATLAS_ROI_TABLE = os.path.join(DATA_DIR, "atlas", "neuromorphometrics.csv")
+ATLAS_LABEL_COLUMN = "ROIid"

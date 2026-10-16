@@ -1,7 +1,7 @@
 """
 Step 1: creates the healthy control (HC) dataset (csv file) used to train the normative model.
 
-Pools four cohorts of healthy adults with CAT12 v12.7 VBM ROI volumes
+Pools four cohorts of healthy adults with CAT12 VBM ROI volumes (v12.7, , v12.6 for HCP)
 (Neuromorphometrics atlas, 140 GM + 140 CSF = 280 ROIs):
     - OpenBHB  (multi-site, already preprocessed into OpenBHB_roi.csv)
     - UK Biobank
